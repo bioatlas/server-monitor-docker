@@ -1,0 +1,56 @@
+version: '3.1'
+
+volumes:
+  data_servermonitor:
+  data_portainer:
+
+services:
+
+  dnsmasq:
+    image: andyshinn/dnsmasq:2.76
+    command: --log-facility=- --server=127.0.0.11 --server=8.8.8.8 --server=172.16.0.72 --server=172.16.0.7 --server=193.10.57.11 --all-servers --neg-ttl=3600 --cache-size=1000 --max-cache-ttl=3600 --min-cache-ttl=3600 
+    cap_add: 
+      - NET_ADMIN 
+    ports:
+      - 172.17.0.1:53:53/tcp
+      - 172.17.0.1:53:53/udp
+    depends_on:
+      - proxy
+    links:
+      - proxy:monitor.bioatlas.se
+      - proxy:portainer.bioatlas.se
+
+  proxy:
+    image: jwilder/nginx-proxy:alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs
+
+  db:
+    image: mysql:8
+    environment:
+      - MYSQL_ROOT_PASSWORD=monitor
+      - MYSQL_DATABASE=monitor
+      - MYSQL_USER=monitor
+      - MYSQL_PASSWORD=monitor
+    volumes:
+      - data_servermonitor:/var/lib/mysql
+
+  monitor:
+    image: bioatlas/monitor:latest
+    environment:
+      - VIRTUAL_HOST=monitor.bioatlas.se
+      - VIRTUAL_PORT=80
+
+  portainer:
+    image: portainer/portainer
+    environment:
+      - VIRTUAL_HOST=portainer.bioatlas.se
+      - VIRTUAL_PORT=9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - data_portainer:/data
+
