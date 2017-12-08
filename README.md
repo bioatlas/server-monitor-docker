@@ -2,11 +2,11 @@
 
 [![AGPLv3 License](http://img.shields.io/badge/license-AGPLv3-blue.svg) ](https://github.com/bioatlas/servermonitor-docker/blob/master/LICENSE)
 
-This is a composition of services that make use of PHP Server Monitor for "external monitoring" of servers and that also provides Portainer as a web-based management interface for containers.
+This is a composition of services that make use of the following tools:
 
-- <http://docs.phpservermonitor.org/en/latest/install.html>
-- <https://portainer.io/overview.html>
-
+- PHP Server Monitor for "external monitoring" of servers, see <http://docs.phpservermonitor.org/en/latest/install.html>
+- Uptime - a nodejs-based simple UI for monitoring uptime of a set of servers, see <https://github.com/fzaninotto/uptime>
+- Portainer as a web-based management interface for containers, see <https://portainer.io/overview.html>
 
 ## Requirements
 
@@ -17,13 +17,18 @@ You also need to install `docker-compose`, see <https://docs.docker.com/compose/
 
 ## Usage
 
+The `docker-compose.yml` file defines the various components of the system.
+
 First make sure that you copy your certs into a `certs` directory or use the Makefile to generate self-signed certs (see separate section on that further down).
 
 Then use the `Makefile` which lists various useful targets providing shortcuts to use the composition of system services, for example you can build and start all services with ....
 
 		make
 
-The `docker-compose.yml` file defines the various components of the system.
+Backup and restore the Uptime application state with ...
+
+		make backup-uptime
+		make restore-uptime
 
 # Certificates and setting up SSL
 
