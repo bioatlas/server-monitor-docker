@@ -3,6 +3,7 @@ version: '3.1'
 volumes:
   data_servermonitor:
   data_portainer:
+  data_mongo:
 
 services:
 
@@ -19,6 +20,7 @@ services:
     links:
       - proxy:monitor.bioatlas.se
       - proxy:portainer.bioatlas.se
+      - proxy:uptime.bioatlas.se
 
   proxy:
     image: jwilder/nginx-proxy:alpine
@@ -54,3 +56,18 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - data_portainer:/data
 
+  mongodb:
+    image: mvertes/alpine-mongo
+    volumes:
+      - data_mongo:/data/db
+
+  uptime:
+    image: usman/docker-uptime
+    environment:
+      - VIRTUAL_HOST=uptime.bioatlas.se
+      - VIRTUAL_PORT=8082
+      - USER=admin
+      - PASS=password12
+    volumes:
+      - ./default.yaml:/tmp/default.yaml
+    command: /bin/bash -c "envsubst < /tmp/default.yaml > /tmp/uptime/config/default.yaml"

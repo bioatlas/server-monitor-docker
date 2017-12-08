@@ -1,5 +1,8 @@
 #! make
 
+TS=$(shell date "+%Y-%m-%d-%H-%M")
+DB=servermonitordocker_mongodb_1
+
 all: init build up
 
 init:
@@ -15,6 +18,28 @@ up:
 
 down:
 	docker-compose down
+
+all: up
+
+mongoinit:
+	@docker exec $(DB) \
+		ash -c "apk update && apk add --no-cache mongodb-tools"
+
+backup-uptime: mongoinit
+	@echo "Backing up data"
+	@docker exec $(DB) \
+		ash -c "mongodump --out=/tmp/dump_$(TS)"
+	@mkdir -p backups && \
+		docker cp $(DB):/tmp/dump_$(TS) backups/dump && \
+		docker cp $(DB):/tmp/dump_$(TS) backups/dump_$(TS)
+
+restore-uptime: mongoinit
+	@echo "Restoring from a backup"
+	@docker cp backups/dump $(DB):/tmp/dump
+	@docker exec $(DB) \
+		ash -c "mongorestore --drop --dir=/tmp/dump"
+#		sh -c "mongo uptime --eval 'db.dropDatabase()' && mongorestore"
+
 
 ssl-certs:
 	@echo "Generating SSL certs using https://hub.docker.com/r/paulczar/omgwtfssl/"
